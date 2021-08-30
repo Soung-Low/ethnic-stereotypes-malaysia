@@ -1,7 +1,7 @@
 import pandas as pd 
 
-# Get frequencies of each word 
 def count_word(word, tokens):
+    '''Get frequencies of a word in a list.'''
     return tokens.count(word)
 
 def get_freq_by_year(words, data, normalized=False):
@@ -32,9 +32,16 @@ def get_freq_by_year(words, data, normalized=False):
     
     return df
 
-# Get top n words closest to a noun by year 
 def get_close_word(noun, models, n=20):
-    '''
+    '''Get top n words closest to a noun by year in trained embeddings.
+
+    Args:
+        noun (str): a string of the target noun.
+        models (dict): a dictionary with keys = year, values = embeddings.
+        n (int): desired number of closest words
+
+    Return:
+        a dataframe containing top n words closest to the given noun in each year.
     '''
     words = []
 
@@ -48,6 +55,7 @@ def get_close_word(noun, models, n=20):
     return pd.DataFrame(words).sort_index()
 
 def verify_word_occurrence(word, models):
+    '''Return True if the given word exists in every model (every year).'''
     occur = True
 
     for year in models:
@@ -59,13 +67,21 @@ def verify_word_occurrence(word, models):
     return occur
 
 def filter_word_by_occurrence(words, models):
+    '''Filter out words that do not exist in every model (every year). '''
     return [word for word in words if verify_word_occurrence(word, models)]
 
 def get_close_adj(words, models, adjs, n=1000):
-    '''Get adjectives that are closest to provided words in word embeddings
+    '''Get adjectives that are closest to provided words in word embeddings. 
+    This is for manual selection of adjectives that are for ethnic groups. 
     
     Args: 
+        words (list): a list of words representing each ethnic group.
+        models (dict): a dictionary with keys = year, values = embeddings,
+        adjs (list): a list of words that contains adjectives (e.g. from POS tagging).
+        n (int): desired number of closest adjectives. 
     
+    Return:
+        a dictionary with keys = given words, values = closest adjectives to each word. 
     '''
     dict_adjs = {word:[] for word in words}
     
@@ -79,13 +95,22 @@ def get_close_adj(words, models, adjs, n=1000):
     return dict_adjs
 
 def get_close_adj_by_year(noun, models, adjs, n=20):
-    '''
+    '''Get top n adjectives closest to a noun by year in trained embeddings.
+
+    Args: 
+        noun (str): the target noun. 
+        models (dict): a dictionary with keys = year, values = embeddings,
+        adjs (list): a list of words that contains adjectives (e.g. from POS tagging).
+        n (int): desired number of closest adjectives. 
+
+    Return:
+        a dataframe containing top n adjectives closest to the given noun in each year.
     '''
     words = []
 
     for year in models:
-        word, dist = zip(*models[year].wv.most_similar(noun, topn=n*100))
-        word = [w for w in word if w in adjs]
+        word, dist = zip(*models[year].wv.most_similar(noun, topn=n*100)) # get n*100 words because of the following filtering
+        word = [w for w in word if w in adjs] # make sure words are in the given adjectives list 
         if len(word) < n:
             word.extend([None]*(n-len(word)))
         else:
@@ -95,11 +120,11 @@ def get_close_adj_by_year(noun, models, adjs, n=20):
     return pd.DataFrame(words).sort_index()
 
 def get_average_distance(vec1, vec2, embeddings):
-    '''Return the average cosine distance between two lists of vectors'''
+    '''Return the average cosine distance between two lists of vectors.'''
     cosine_dist = [1-embeddings.wv.similarity(x, y) for x in vec1 for y in vec2]
     return sum(cosine_dist)/len(cosine_dist)
 
 def get_average_sim(vec1, vec2, embeddings):
-    '''Return the average cosine distance between two lists of vectors'''
+    '''Return the average cosine similarity between two lists of vectors.'''
     cosine_sim = [embeddings.wv.similarity(x, y) for x in vec1 for y in vec2]
     return sum(cosine_sim)/len(cosine_sim)
