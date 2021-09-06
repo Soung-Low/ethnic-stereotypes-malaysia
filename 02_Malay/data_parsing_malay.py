@@ -32,7 +32,7 @@ def pdf_to_text(file_name):
             date = date.strip('| ')
         else: 
             date = None
-
+     
         if re.search(r'(Author:)[a-zA-Z\s\/]+\|', text):
             author = re.search(r'(Author:)[a-zA-Z\s\/]+\|', text)[0]
             text = text.split(author)[1]
